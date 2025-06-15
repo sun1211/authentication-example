@@ -1,0 +1,26 @@
+{
+  "name": "authentication-demo",
+  "version": "1.0.0",
+  "description": "Simple authentication demo",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "rimraf build && tsc -p tsconfig.json",
+    "start": "NODE_ENV=test nodemon src/api.ts"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/node": "^20.11.0",
+    "nodemon": "^2.0.12",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}
