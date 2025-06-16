@@ -12,7 +12,7 @@ Here's a comprehensive list of common authentication methods used in **Node.js b
   - `cookie-session`
   - `connect-redis` (for Redis-based sessions)
 
-### **2. Token-Based Authentication (JWT - JSON Web Tokens)**
+### **2. [Token-Based Authentication (JWT - JSON Web Tokens)](#jwt-token-based-authentication-demo)**
 - Stateless authentication using digitally signed tokens.
 - Tokens are stored client-side (localStorage, cookies, or mobile storage).
 - **Libraries**:
@@ -104,7 +104,7 @@ A simple yet secure authentication system built with Express.js using session-ba
 
 ## Running the Application
 
-```bash
+```bash:express-session
 npm start
 ```
 
@@ -350,3 +350,410 @@ app.use(session({
    TTL Reached            401 Error             New Session Cycle
    Auto-cleanup           Clear Cookie          Fresh Start
 ```
+
+# JWT Token-Based Authentication Demo
+
+A simple Node.js + TypeScript demonstration of JWT-based authentication with Express.
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+npm install express jsonwebtoken bcryptjs
+npm install -D @types/express @types/jsonwebtoken @types/bcryptjs @types/node typescript ts-node
+
+# Start server
+npx ts-node server.ts
+```
+
+Visit `http://localhost:3000/demo` for API instructions.
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/register` | Register new user | ❌ |
+| POST | `/login` | Login user | ❌ |
+| GET | `/profile` | Get user profile | ✅ |
+| GET | `/demo` | API documentation | ❌ |
+
+## 🔑 JWT Flow
+
+1. **Register/Login** → Receive JWT token
+2. **Include token** in `Authorization: Bearer <token>` header  
+3. **Access protected routes** with valid token
+
+## 📝 Usage Examples
+
+### Register User
+```bash
+curl -X POST http://localhost:3000/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@example.com","password":"password123"}'
+```
+
+### Login User
+```bash
+curl -X POST http://localhost:3000/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@example.com","password":"password123"}'
+```
+
+### Access Protected Route
+```bash
+curl -X GET http://localhost:3000/profile \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+## 🛡️ Security Features
+
+- **Password Hashing**: bcrypt with salt rounds
+- **JWT Tokens**: 1-hour expiration
+- **Protected Routes**: Middleware validation
+- **Error Handling**: Proper HTTP status codes
+
+## 🔧 Comprehensive JWT Guide
+
+### 🔑 1. Token Generation
+
+**Basic Syntax:**
+```typescript
+jwt.sign(payload, secret, options)
+```
+
+**From Our Example:**
+```typescript
+const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+```
+
+**Detailed Breakdown:**
+- `payload`: Data stored in token (user ID, role, permissions)
+- `secret`: Secret key for signing (keep secure!)
+- `options`: Configuration object for token behavior
+
+### ⏰ 2. Expiration Configuration
+
+**String Format (Recommended):**
+```typescript
+{ expiresIn: '1h' }    // 1 hour
+{ expiresIn: '30m' }   // 30 minutes  
+{ expiresIn: '7d' }    // 7 days
+{ expiresIn: '2y' }    // 2 years
+```
+
+**Numeric Format (Seconds):**
+```typescript
+{ expiresIn: 3600 }    // 3600 seconds = 1 hour
+```
+
+**Using 'exp' Claim:**
+```typescript
+{ 
+  userId: 123,
+  exp: Math.floor(Date.now() / 1000) + (60 * 60) // 1 hour from now
+}
+```
+
+### ✅ 3. Token Verification
+
+**Basic Verification (Our Example):**
+```typescript
+try {
+  const decoded = jwt.verify(token, JWT_SECRET) as any;
+  req.userId = decoded.userId;
+} catch (error) {
+  // Handle invalid/expired token
+}
+```
+
+**With Options:**
+```typescript
+jwt.verify(token, JWT_SECRET, {
+  issuer: 'my-app',           // Must match token's issuer
+  audience: 'api-users',      // Must match token's audience  
+  algorithms: ['HS256'],      // Only allow specific algorithms
+  clockTolerance: 30,         // Allow 30 seconds clock skew
+  maxAge: '1h'               // Additional age limit
+});
+```
+
+### ❌ 4. Error Types
+
+```typescript
+catch (error) {
+  if (error instanceof jwt.TokenExpiredError) {
+    // Token has expired
+  } else if (error instanceof jwt.JsonWebTokenError) {
+    // Invalid token format/signature
+  } else if (error instanceof jwt.NotBeforeError) {
+    // Token not active yet
+  }
+}
+```
+
+### 🔄 5. Common Expiration Patterns
+
+**Access Tokens (Short-lived):**
+- **API Access**: `15m` - `1h`
+- **Sensitive Operations**: `5m`
+
+**Refresh Tokens (Long-lived):**
+- **Mobile Apps**: `7d` - `30d`
+- **Web Apps**: `24h` - `7d`
+
+**Special Purpose:**
+- **Password Reset**: `2h`
+- **Email Verification**: `24h`
+
+### 🛡️ 6. Security Best Practices
+
+**Strong Secrets:**
+```typescript
+// Use environment variables
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Generate secure random secret
+const crypto = require('crypto');
+const secret = crypto.randomBytes(64).toString('hex');
+```
+
+**Minimal Payload:**
+```typescript
+// Good - minimal data
+{ userId: 123, role: 'user' }
+
+// Bad - sensitive data
+{ userId: 123, password: 'secret', creditCard: '1234' }
+```
+
+**Token Pair Strategy:**
+```typescript
+// Short access token
+const accessToken = jwt.sign(
+  { userId: 123, type: 'access' },
+  JWT_SECRET,
+  { expiresIn: '15m' }
+);
+
+// Long refresh token  
+const refreshToken = jwt.sign(
+  { userId: 123, type: 'refresh' },
+  JWT_SECRET,
+  { expiresIn: '7d' }
+);
+```
+
+### 📝 7. Complete Configuration Example
+
+```typescript
+const token = jwt.sign(
+  { 
+    userId: 123,
+    email: 'user@example.com',
+    role: 'admin'
+  },
+  JWT_SECRET,
+  {
+    expiresIn: '1h',              // Token expires in 1 hour
+    issuer: 'my-application',     // Who created this token
+    audience: 'my-app-users',     // Who can use this token
+    subject: 'user-auth',         // What this token is for
+    algorithm: 'HS256',           // Signing algorithm
+    jwtid: 'unique-id-123'        // Unique token identifier
+  }
+);
+```
+
+### 🎯 Key Takeaways
+
+1. **Keep secrets secure** - use environment variables
+2. **Use appropriate expiration times** - balance security vs UX
+3. **Handle errors properly** - different error types need different responses
+4. **Minimal payloads** - don't store sensitive data
+5. **Token refresh strategy** - use short access + long refresh tokens
+6. **Validate thoroughly** - verify issuer, audience, algorithms
+
+---
+
+# Session-Based Authentication - Demo Example
+
+A simple yet secure authentication system built with Express.js using session-based authentication, bcrypt password hashing, and TypeScript.
+
+## Features
+
+- ✅ User registration with password hashing
+- ✅ Session-based login/logout
+- ✅ Protected routes with middleware
+- ✅ Secure session configuration
+- ✅ TypeScript support
+- ✅ HTTP-only cookies for security
+
+## Running the Application
+
+```bash
+npm start:jwt
+```
+
+The server will start on `http://localhost:3000`
+
+## API Endpoints
+
+| Method | Endpoint | Description | Protected |
+|--------|----------|-------------|-----------|
+| GET | `/` | API status and auth info | No |
+| POST | `/register` | Register new user | No |
+| POST | `/login` | User login | No |
+| POST | `/logout` | User logout | No |
+| GET | `/profile` | Get user profile | Yes |
+| GET | `/dashboard` | User dashboard | Yes |
+| GET | `/session` | Check session status | No |
+
+## 🔐 Session Management Deep Dive
+
+### 1. Session Creation
+
+Sessions are automatically created when users log in successfully:
+
+```typescript
+// Login endpoint creates session
+app.post('/login', async (req: Request, res: Response) => {
+  // ... password validation ...
+  
+  // 🎯 Session Creation
+  req.session.userId = user.id;        // Store user ID
+  req.session.username = user.username; // Store username
+  
+  // Session cookie automatically sent to client
+});
+```
+
+**What happens:**
+- Server generates unique session ID
+- Session data stored server-side (memory by default)
+- Secure HTTP-only cookie sent to client with session ID
+- Client automatically sends cookie with future requests
+
+### 2. Session Configuration & Timeout
+
+```typescript
+app.use(session({
+  secret: 'your-secret-key-change-in-production', // 🔑 Signs session cookies
+  resave: false,                    // Don't save unchanged sessions
+  saveUninitialized: false,         // Don't save empty sessions
+  cookie: {
+    secure: false,                  // Set true for HTTPS in production
+    httpOnly: true,                 // 🛡️ Prevents XSS attacks
+    maxAge: 24 * 60 * 60 * 1000    // ⏰ 24 hours timeout
+  }
+}));
+```
+
+### 3. Session Storage Options
+
+**Memory Store (Development Only)**
+```typescript
+// Sessions lost on server restart
+const users: User[] = []; // In-memory storage
+```
+
+**Redis Store (Recommended)**
+```typescript
+import RedisStore from 'connect-redis';
+import { createClient } from 'redis';
+
+const redisClient = createClient();
+app.use(session({
+  store: new RedisStore({ client: redisClient }),
+  // ... other options
+}));
+```
+
+---
+
+# OAuth 2.0 / OpenID Connect
+
+Delegated authentication allowing users to login with third-party providers like Google, GitHub, or Facebook.
+
+## Key Features
+- **No password storage** - Users authenticate with trusted providers
+- **Scoped access** - Request specific permissions
+- **Refresh tokens** - Long-term access without re-authentication
+
+## Libraries
+- `passport-oauth2` - Generic OAuth 2.0 strategy
+- `passport-google-oauth20` - Google OAuth
+- `passport-github2` - GitHub OAuth
+- `openid-client` - OpenID Connect client
+
+---
+
+# API Key Authentication
+
+Simple authentication method using unique API keys for server-to-server communication.
+
+## Implementation
+```typescript
+const authenticateApiKey = (req: Request, res: Response, next: NextFunction) => {
+  const apiKey = req.headers['x-api-key'] || req.query.apikey;
+  
+  if (!apiKey || !isValidApiKey(apiKey)) {
+    return res.status(401).json({ error: 'Invalid API key' });
+  }
+  
+  next();
+};
+```
+
+---
+
+# Basic Authentication
+
+Uses `username:password` encoded in Base64 in the Authorization header.
+
+## Implementation
+```typescript
+import basicAuth from 'express-basic-auth';
+
+app.use(basicAuth({
+  users: { 'admin': 'password123' },
+  challenge: true
+}));
+```
+
+---
+
+# Passport.js Auth Middleware
+
+Passport.js provides a unified interface for multiple authentication strategies.
+
+## Popular Strategies
+- `passport-local` - Username/password authentication
+- `passport-jwt` - JWT token authentication
+- `passport-google-oauth20` - Google OAuth
+- `passport-github` - GitHub OAuth
+
+---
+
+# Additional Authentication Methods
+
+### Magic Link / Passwordless Authentication
+- Users log in via email links
+- **Libraries**: Custom JWT + email service (Nodemailer)
+
+### Two-Factor Authentication (2FA)
+- TOTP or SMS-based verification
+- **Libraries**: `speakeasy`, `node-2fa`, Twilio
+
+### LDAP / Active Directory
+- Enterprise authentication
+- **Libraries**: `ldapjs`, `passport-ldapauth`
+
+### Firebase Authentication
+- Managed auth service by Google
+- **Library**: `firebase-admin`
+
+### WebAuthn / FIDO2
+- Hardware security keys or biometrics
+- **Libraries**: `fido2-lib`, `simplewebauthn`
+
+---
