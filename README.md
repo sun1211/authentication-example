@@ -265,7 +265,7 @@ const users: User[] = []; // In-memory storage
 ```
 **⚠️ Not for production** - Sessions lost on restart, won't scale
 
-### Redis Store (Recommended)
+### Redis Store (Recommended): [See full implementation →](./SESSION_REDIS.md)
 ```bash
 npm install connect-redis redis
 ```
@@ -368,7 +368,7 @@ npx ts-node server.ts
 
 Visit `http://localhost:3000/demo` for API instructions.
 
-## 📡 API Endpoints
+## 📡 API Endpoints [See full implementation →](./express_authentication_api.md)
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
