@@ -282,7 +282,7 @@ app.use(session({
 }));
 ```
 
-### MongoDB Store
+### MongoDB Store: [See full implementation →](./SESSION_MONGO.md)
 ```bash
 npm install connect-mongo
 ```

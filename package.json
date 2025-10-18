@@ -8,10 +8,12 @@
     "build": "rimraf build && tsc -p tsconfig.json",
     "start:express-session": "NODE_ENV=test nodemon src/express_session.ts",
     "start:express-session-redis": "NODE_ENV=test nodemon src/express_sessions_redis.ts",
+    "start:express-session-mongo": "NODE_ENV=test nodemon src/express_sessions_mongo.ts",
     "start:jwt": "NODE_ENV=test nodemon src/jwt.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "connect-mongo": "^5.1.0",
     "connect-redis": "^7.0.1",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
