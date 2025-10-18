@@ -110,7 +110,7 @@ npm start
 
 The server will start on `http://localhost:3000`
 
-## API Endpoints
+## API Endpoints  [See full document →](./express_authentication_api.md)
 
 | Method | Endpoint | Description | Protected |
 |--------|----------|-------------|-----------|
@@ -368,7 +368,7 @@ npx ts-node server.ts
 
 Visit `http://localhost:3000/demo` for API instructions.
 
-## 📡 API Endpoints [See full implementation →](./express_authentication_api.md)
+## 📡 API Endpoints
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
